@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FlyLoong Start</title>
+  <link rel="icon" href="images/home.svg" type="image/x-icon">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.2.0/remixicon.min.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/main.css">
+  <!-- 首帧底色 + 整页淡入，必须是「内联且靠前」的：
+       默认底色来自浏览器，而 main.css 是外链 —— 在它生效之前会先画一帧默认色，
+       看起来就是"进页面黑一下/白一下"。这里把底色和淡入写进文档开头，
+       从第一个字节起就是正确颜色，并且内容整体「从暗渐渐浮现」，
+       与官网那种"先暗、再慢慢显出内容"的入场一致。
+       改底色时记得同步 css/main.css 里的 --bg。 -->
+  <style>
+    html { background-color: #0e1219; }
+    body {
+      margin: 0;
+      background-color: #0e1219;
+      animation: bootFade 1.5s ease-in-out both;
+    }
+    @keyframes bootFade {
+      from { opacity: 0; }
+      to   { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 流动背景：hero 光带（WebGL）+ 交互网格 -->
+  <div id="hero-shader" aria-hidden="true"></div>
+  <div id="deep-bg">
+    <div class="deep-bg-grid"></div>
+  </div>
+
+  <nav class="navbar">
+    <div class="nav-container">
+      <div class="nav-tabs" id="navTabs"></div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="search-wrapper" id="search-container"></div>
+    <div id="main-content-area"></div>
+  </div>
+
+  <footer>
+    <p><a href="https://github.com/zfloong/zfloong.github.io" target="_blank" rel="noopener noreferrer">LoongStart</a> · 文明其精神 野蛮其体魄</p>
+    <button id="edit-entry" class="edit-entry" type="button" aria-haspopup="dialog">
+      <i class="ri-settings-3-line" aria-hidden="true"></i><span>编辑</span>
+    </button>
+  </footer>
+
+  <script type="module" src="js/nav-manager.js"></script>
+
+</body>
+</html>

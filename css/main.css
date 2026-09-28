@@ -1,0 +1,1016 @@
+/* =========================================
+   FlyLoong Navigation — Deep Dark Style
+   ========================================= */
+
+:root {
+  /* 底色 + 导航栏 + 搜索历史 + 卡片，四者同色系：
+     只改 --bg 而不管另外三个，导航栏和搜索历史会与底色"分家"。 */
+  --bg: #0e1219;
+  --nav-bg-top: rgba(11,14,20,0.85);
+  --nav-bg-mid: rgba(11,14,20,0.45);
+  --history-bg: rgba(16,20,28,0.88);
+  --card-bg: rgba(10,14,22,0.25);
+  --text: #e8e8ec;
+  --text-sub: #8a8a9a;
+  /* 品牌白：文字/描边/虚线/链接。填充位不再用它，改走下面的玻璃配方 */
+  --primary: #ffffff;
+  --glass-core: hsla(0,0%,100%,0.13);
+  --glass-edge: linear-gradient(135deg, rgba(255,255,255,0.75) 0%, rgba(255,255,255,0.08) 35%, rgba(255,255,255,0.04) 65%, rgba(255,255,255,0.5) 100%);
+  --glass-glow: 0 0 16px rgba(255,255,255,0.1), 0 0 32px rgba(255,255,255,0.05);
+  --border: rgba(255,255,255,0.07);
+  /* 警示色：危险按钮用冷蓝灰、错误文字用柔红，都不抢视觉焦点 */
+  --danger: #9fb4cf;
+  --error: #e39b95;
+  --shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --glass: blur(30px);
+
+
+
+  /* --- 背景观感参数（由 js/modules/deep-bg.js 的 readCssTuning() 读取）---
+     参考 dsh-plugin-backdrop 逆向项目的默认值 */
+  --bg-grid-cell: 90;            /* 格距（DeepSeek 默认 90px）*/
+  --bg-grid-line: 0.06;          /* 网格线不透明度（DeepSeek 默认 0.06）*/
+  --bg-grid-dot-r: 1.8;          /* 顶点半径（DeepSeek 默认 1.8）*/
+  --bg-grid-dot: 0.12;           /* 顶点不透明度（DeepSeek 默认 0.12）*/
+  --bg-grid-highlight: 255,255,255;  /* 鼠标附近的高亮色（DeepSeek 用纯白）*/
+}
+
+/* =========================================
+   全局
+   ========================================= */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  padding-top: 62px;
+  background-image:
+    radial-gradient(circle at 30% 20%, rgba(80,60,180,0.07) 0%, transparent 45%),
+    radial-gradient(circle at 70% 70%, rgba(40,80,160,0.05) 0%, transparent 45%);
+}
+
+/* =========================================
+   导航栏 — 融入背景
+   ========================================= */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 52px;
+  /* 半透明渐变，网格透得出来 —— 刻意与背景融为一体（不做磨砂/分隔线，
+     否则会在顶部切出一条边，破坏一体感）。两端色值跟随背景变量，避免与底色分家。 */
+  background: linear-gradient(to bottom, var(--nav-bg-top) 0%, var(--nav-bg-mid) 70%, transparent 100%);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nav-container {
+  width: 100%;
+  max-width: 1280px;
+  padding: 0 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 0.5rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding: 0.5rem 0;
+}
+.nav-tabs::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text);
+  font-size: 0.82rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: 50px;
+  cursor: pointer;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0.7;
+}
+.tab-btn:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.05);
+}
+.tab-btn.active {
+  background: linear-gradient(var(--glass-core), var(--glass-core)) padding-box, var(--glass-edge) border-box;
+  color: #fff;
+  text-shadow: 0 0 0.5px currentColor, 0 1px 2px rgba(0,0,0,0.45);
+  opacity: 1;
+  border-color: transparent;
+  backdrop-filter: blur(12px) saturate(1.35);
+  box-shadow: var(--glass-glow), inset 0 1px 1px hsla(0,0%,100%,0.45);
+}
+.tab-btn.active:hover {
+  box-shadow: 0 4px 14px rgba(255,255,255,0.18), var(--glass-glow), inset 0 1px 1px hsla(0,0%,100%,0.8);
+}
+
+/* =========================================
+   搜索区
+   ========================================= */
+.main-content {
+  max-width: 1280px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+}
+
+.search-wrapper {
+  max-width: 600px;
+  margin: 0 auto 0.1rem auto;
+  text-align: center;
+  animation: searchFadeIn 0.4s ease-out;
+}
+
+.search-engines {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1.0rem;
+  margin-bottom: 1.2rem;
+}
+
+.divider {
+  width: 1px;
+  height: 16px;
+  background-color: var(--text);
+  opacity: 0.2;
+  margin: 0 0.2rem;
+}
+
+.mini-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  transition: all 0.2s ease;
+  opacity: 0.8;
+  background: rgba(255,255,255,0.05);
+}
+.mini-icon:hover {
+  opacity: 1;
+  background: rgba(255,255,255,0.15);
+  transform: scale(1.1);
+}
+.mini-icon img {
+  width: 20px;
+  height: 20px;
+}
+
+.engine-btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text);
+  opacity: 0.6;
+  font-size: 0.85rem;
+  cursor: pointer;
+  padding: 6px 16px;
+  border-radius: 20px;
+  transition: all 0.2s;
+}
+.engine-btn:hover {
+  opacity: 1;
+  border-color: rgba(255,255,255,0.15);
+}
+.engine-btn.active {
+  opacity: 1;
+  background: linear-gradient(var(--glass-core), var(--glass-core)) padding-box, var(--glass-edge) border-box;
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+  backdrop-filter: blur(12px) saturate(1.35);
+  box-shadow: var(--glass-glow), inset 0 1px 1px hsla(0,0%,100%,0.45);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+}
+
+.search-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 20px;
+  transition: box-shadow 0.3s;
+}
+.search-box:focus-within {
+  box-shadow: 0 0 10px rgba(180, 200, 255, 0.5), 0 0 25px rgba(150, 180, 255, 0.2), inset 0 0 10px rgba(180, 200, 255, 0.12);
+}
+.search-input {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  padding-right: 3.5rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: rgba(10,14,22,0.25);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: var(--text);
+  font-size: 1rem;
+  outline: none;
+  box-shadow: var(--shadow);
+  transition: all 0.3s ease;
+}
+.search-input:focus {
+  border-color: rgba(255,255,255,0.15);
+  box-shadow: 0 0 30px rgba(60,80,180,0.1);
+}
+.search-input::placeholder {
+  color: #bbbdbf;
+  opacity: 1;
+}
+
+.search-btn {
+  position: absolute;
+  right: 15px;
+  background: transparent;
+  border: none;
+  color: var(--primary);
+  font-size: 1.3rem;
+  cursor: pointer;
+  opacity: 0.8;
+  transition: opacity 0.2s;
+}
+.search-btn:hover { opacity: 1; }
+
+/* =========================================
+   搜索历史
+   ========================================= */
+.search-history {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: var(--history-bg);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  z-index: 100;
+  max-height: 400px;
+  overflow-y: auto;
+  display: none;
+  margin-top: 6px;
+}
+
+.search-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.search-history-header span {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-sub);
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+.search-history-clear {
+  background: none;
+  border: none;
+  color: var(--text-sub);
+  cursor: pointer;
+  font-size: 0.78rem;
+  padding: 2px 8px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+.search-history-clear:hover {
+  color: var(--text);
+  background: rgba(255,255,255,0.06);
+}
+
+.search-history-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: var(--text);
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+}
+.search-history-item:hover {
+  background: rgba(255,255,255,0.08);
+  border-left-color: var(--primary);
+}
+.search-history-item i {
+  color: var(--text-sub);
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* =========================================
+   内容板块
+   ========================================= */
+.category-section {
+  display: none;
+}
+.category-section.active {
+  display: block;
+}
+
+.section-header {
+  margin-bottom: 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding-left: 0.5rem;
+}
+.section-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+}
+
+.section-group-title {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: var(--text);
+  padding: 0.6rem 0.5rem;
+  margin-top: 0.5rem;
+  opacity: 0.85;
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  justify-content: flex-start;
+  position: relative;
+  align-items: center;
+  transition: opacity 0.2s;
+}
+.section-group-title:hover { opacity: 1; }
+.section-group-title::after {
+  content: '\ea4e';
+  font-family: 'remixicon';
+  font-size: 1.1rem;
+  color: var(--text-sub);
+  transition: transform 0.3s;
+}
+.section-group-title.collapsed::after {
+  transform: rotate(-90deg);
+}
+
+.grid.grid-collapsed { display: none; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+}
+
+/* 卡片 */
+.card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.1rem;
+  background: var(--card-bg);
+  backdrop-filter: var(--glass);
+  -webkit-backdrop-filter: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  text-decoration: none;
+  color: var(--text);
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+              background 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+              border-color 0.3s cubic-bezier(0.25, 0.8, 0.25, 1),
+              box-shadow 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+  position: relative;
+  z-index: 1;
+}
+/* 键盘光标（keyboard-nav.js）与鼠标悬停共用同一套强调，不再单独设计 */
+.card:hover,
+.card.kb-cursor {
+  transform: translateY(-4px);
+  background: rgba(255,255,255,0.05);
+  border-color: transparent;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+}
+/* 卡片内容浮在流光之上（相对定位 + z-index 1 压住 ::after 的光圈） */
+.card img, .card-info {
+  position: relative;
+  z-index: 1;
+}
+.card img {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  background: transparent;
+}
+.card-info h3 {
+  font-size: 0.95rem;
+  font-weight: 500;
+  line-height: 1.4;
+  margin-bottom: 2px;
+}
+
+footer {
+  text-align: center;
+  padding: 4rem 0;
+  color: #cfd0d1;
+  font-size: 0.85rem;
+  letter-spacing: 1px;
+}
+footer a {
+  color: #cfd0d1;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+footer a:hover {
+  color: #fff;
+}
+
+
+
+
+
+/* 卡片入场：只做位移，不动 opacity，避免 backdrop-filter 延迟渲染 */
+@keyframes cardSlideIn {
+  from { transform: translateY(16px); }
+  to { transform: none; }
+}
+.card-wrap {
+  animation: cardSlideIn 0.5s ease-out backwards;
+}
+.card-wrap:nth-child(1)  { animation-delay: 0.05s; }
+.card-wrap:nth-child(2)  { animation-delay: 0.06s; }
+.card-wrap:nth-child(3)  { animation-delay: 0.07s; }
+.card-wrap:nth-child(4)  { animation-delay: 0.08s; }
+.card-wrap:nth-child(5)  { animation-delay: 0.09s; }
+.card-wrap:nth-child(6)  { animation-delay: 0.10s; }
+.card-wrap:nth-child(7)  { animation-delay: 0.11s; }
+.card-wrap:nth-child(8)  { animation-delay: 0.12s; }
+.card-wrap:nth-child(9)  { animation-delay: 0.13s; }
+.card-wrap:nth-child(10) { animation-delay: 0.14s; }
+.card-wrap:nth-child(11) { animation-delay: 0.15s; }
+.card-wrap:nth-child(12) { animation-delay: 0.16s; }
+.card-wrap:nth-child(13) { animation-delay: 0.17s; }
+.card-wrap:nth-child(14) { animation-delay: 0.18s; }
+.card-wrap:nth-child(15) { animation-delay: 0.19s; }
+.card-wrap:nth-child(16) { animation-delay: 0.20s; }
+.card-wrap:nth-child(17) { animation-delay: 0.21s; }
+.card-wrap:nth-child(18) { animation-delay: 0.22s; }
+.card-wrap:nth-child(19) { animation-delay: 0.23s; }
+.card-wrap:nth-child(20) { animation-delay: 0.24s; }
+
+
+@keyframes searchFadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 加载指示器的转圈（error-handler.js 内联引用动画名 spin，必须存在） */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* 注意：这里刻意不做 prefers-reduced-motion 适配。
+   Windows 的「显示动画」开关(MinAnimate)会映射成 prefers-reduced-motion: reduce 且全局生效，
+   一旦用它关停流光/入场动画，页面在关掉系统动画的机器上会整片失去动效。
+   目前代码里没有任何 reduced-motion 开关（deep-bg.js 与 hero-shader.js 都没有），
+   如需恢复该适配，要在两个渲染循环里各自加判断。 */
+
+
+
+/* =========================================
+   流动背景容器
+   ========================================= */
+/* Hero 区流动光带（WebGL）：只铺首屏一条，底部渐隐后交给下面的 CSS 网格。
+   ⚠️ 兜底色**不能是近黑**：本层 z-index:-3，画在 body 背景之前，
+   如果给它一个近黑底（曾经是 #050a18），在 WebGL 画出第一帧之前
+   整屏会先黑一下再变亮 —— 就是"进页面突然黑屏"的原因。
+   这里只保留很淡的蓝色光晕，底色交给 body（透明）。 */
+#hero-shader {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -3;   /* 光带在最底，网格(-1) 盖在上面 */
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 70% 60% at 62% 28%, rgba(26,56,112,0.55) 0%, transparent 62%),
+    radial-gradient(ellipse 90% 70% at 40% 45%, rgba(32,74,126,0.45) 0%, transparent 70%);
+  -webkit-mask: linear-gradient(rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.91) 12%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0.72) 100%);
+  mask: linear-gradient(rgba(0,0,0,0.95) 0%, rgba(0,0,0,0.91) 12%, rgba(0,0,0,0.85) 55%, rgba(0,0,0,0.72) 100%);
+}
+#hero-shader canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+
+#deep-bg {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* 网格层：CSS mask 从上到下渐隐（参考 dsh-plugin-backdrop） */
+.deep-bg-grid {
+  position: absolute;
+  inset: 0;
+  z-index: 8;
+  mask: linear-gradient(rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.55) 100%);
+  -webkit-mask: linear-gradient(rgba(0,0,0,0.94) 0%, rgba(0,0,0,0.7) 45%, rgba(0,0,0,0.55) 100%);
+}
+
+/* =========================================
+   在线编辑器（js/modules/editor.js）
+   入口：页脚 .edit-entry —— 按钮常驻可见，编辑器模块点击后才动态加载
+   ========================================= */
+.edit-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1rem;
+  padding: 0.35rem 0.9rem;
+  background: hsla(0,0%,100%,0.06);
+  border: 1px solid hsla(0,0%,100%,0.15);
+  border-radius: 50px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 0.78rem;
+  letter-spacing: 0;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.edit-entry:hover {
+  color: var(--primary);
+  border-color: hsla(0,0%,100%,0.6);
+  background: hsla(0,0%,100%,0.12);
+}
+.edit-entry i {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+body.edit-open {
+  overflow: hidden;
+}
+
+/* z-index 必须压过 .navbar(1000)：导航栏是 fixed 的 52px 顶栏，
+   否则面板头部（含「关闭」）会被它盖住点不到 */
+.edit-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1001;
+  background: rgba(0,0,0,0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+.edit-backdrop.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.edit-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+  width: min(440px, 92vw);
+  height: 100%;
+  background: var(--history-bg);
+  backdrop-filter: var(--glass);
+  -webkit-backdrop-filter: var(--glass);
+  border-left: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  transform: translateX(100%);
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+.edit-panel.open {
+  transform: translateX(0);
+}
+
+.edit-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.1rem;
+  border-bottom: 1px solid var(--border);
+}
+.edit-title {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+.edit-title span {
+  margin-left: 6px;
+  color: var(--text-sub);
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+.edit-close {
+  padding: 2px 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-sub);
+  font-family: inherit;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.edit-close:hover {
+  color: var(--text);
+}
+
+.edit-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.9rem 1.1rem 1.2rem;
+}
+
+.edit-field {
+  margin-bottom: 0.95rem;
+}
+.edit-label {
+  display: block;
+  margin-bottom: 0.35rem;
+  color: var(--text-sub);
+  font-size: 0.72rem;
+}
+.edit-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.5rem 0.7rem;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.82rem;
+}
+.edit-input:focus {
+  outline: none;
+  border-color: rgba(255,255,255,0.5);
+}
+.edit-hint {
+  margin-top: 0.3rem;
+  color: var(--text-sub);
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+.edit-error {
+  min-height: 1rem;
+  color: var(--error);
+  font-size: 0.72rem;
+}
+.edit-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.1rem;
+}
+.edit-btn {
+  padding: 0.45rem 0.9rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background 0.2s;
+}
+.edit-btn:hover {
+  border-color: rgba(255,255,255,0.18);
+}
+.edit-btn.primary {
+  background: linear-gradient(var(--glass-core), var(--glass-core)) padding-box, var(--glass-edge) border-box;
+  color: #fff;
+  border-color: transparent;
+  font-weight: 600;
+  backdrop-filter: blur(12px) saturate(1.35);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+  box-shadow: var(--glass-glow), inset 0 1px 1px hsla(0,0%,100%,0.45);
+}
+.edit-btn.danger {
+  color: var(--danger);
+}
+.edit-btn.danger:hover {
+  border-color: rgba(159,180,207,0.5);
+}
+.edit-btn.mini {
+  padding: 0.3rem 0.7rem;
+  font-size: 0.74rem;
+  white-space: nowrap;
+}
+
+/* 图标字段下面一行：预览缩略图 + 自动抓取 + 抓取结果 */
+.edit-icon-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: -0.45rem 0 0.95rem;
+}
+.edit-icon-preview {
+  flex: 0 0 auto;
+  width: 32px;
+  height: 32px;
+  padding: 2px;
+  object-fit: contain;
+  background: rgba(0,0,0,0.25);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.edit-hint.grow {
+  flex: 1;
+  min-width: 0;
+  margin-top: 0;
+}
+.edit-link {
+  display: inline-block;
+  margin-top: 0.4rem;
+  color: var(--primary);
+  font-size: 0.72rem;
+  text-decoration: none;
+}
+.edit-link:hover {
+  text-decoration: underline;
+}
+
+/* 推送抽屉里的分块：连接状态 / 本次要提交的内容 */
+.edit-conn {
+  margin-bottom: 1rem;
+  padding: 0.7rem 0.8rem;
+  background: rgba(0,0,0,0.2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.edit-conn-title {
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+.edit-conn-sub {
+  margin-top: 0.35rem;
+  color: var(--text-sub);
+  font-size: 0.72rem;
+  line-height: 1.6;
+  word-break: break-all;
+}
+.edit-conn .edit-actions {
+  margin-top: 0.7rem;
+}
+
+.edit-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 0.8rem 1.1rem;
+  border-top: 1px solid var(--border);
+  color: var(--text-sub);
+  font-size: 0.72rem;
+}
+
+/* =========================================
+   编辑模式（js/modules/editor.js + drag-sort.js）
+   ========================================= */
+.edit-entry.on {
+  color: var(--primary);
+  border-color: hsla(0,0%,100%,0.6);
+  background: hsla(0,0%,100%,0.12);
+}
+
+body.edit-mode .card-wrap,
+body.edit-mode .tab-btn {
+  cursor: grab;
+  touch-action: none;
+}
+body.edit-mode .card {
+  border-style: dashed;
+  border-color: rgba(255,255,255,0.35);
+}
+/* 编辑模式下不做悬停上浮：拖动时卡片跟着跑会看不清落点 */
+body.edit-mode .card:hover {
+  transform: none;
+  background: var(--card-bg);
+  box-shadow: none;
+  border-color: rgba(255,255,255,0.35);
+}
+body.edit-mode .grid {
+  min-height: 76px;
+}
+body.edit-mode .grid:empty::after {
+  content: '把卡片拖到这里';
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-sub);
+  font-size: 0.75rem;
+  border: 1px dashed var(--border);
+  border-radius: 18px;
+}
+/* 编辑模式下折叠箭头靠右，＋ 紧跟在分组名后面 */
+body.edit-mode .section-group-title::after {
+  margin-left: auto;
+}
+
+.sec-add {
+  margin-left: 8px;
+  padding: 0 6px;
+  background: transparent;
+  border: 1px dashed rgba(255,255,255,0.5);
+  border-radius: 8px;
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  cursor: pointer;
+}
+.sec-add:hover {
+  background: rgba(255,255,255,0.12);
+}
+.edit-add-group {
+  margin: 0.2rem 0 0 0.5rem;
+  padding: 0.4rem 0.9rem;
+  background: transparent;
+  border: 1px dashed rgba(255,255,255,0.45);
+  border-radius: 50px;
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+.edit-add-group:hover {
+  background: rgba(255,255,255,0.1);
+}
+.edit-add-cat {
+  margin-left: 6px;
+  padding: 0.35rem 0.7rem;
+  background: transparent;
+  border: 1px dashed rgba(255,255,255,0.5);
+  border-radius: 50px;
+  color: var(--primary);
+  font-family: inherit;
+  font-size: 0.82rem;
+  line-height: 1;
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+.edit-add-cat:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+/* 拖动中：原件让出布局位置，占位符顶上 —— 只 visibility:hidden 的话原件仍占一格，
+   网格里等于多出一个格子，后面的卡片被挤位，落点判定就永远追不上指针 */
+.card-wrap.dragging,
+.tab-btn.dragging {
+  display: none;
+}
+.drag-ph {
+  box-sizing: border-box;
+  border: 1px dashed rgba(255,255,255,0.55);
+  border-radius: 18px;
+  background: rgba(255,255,255,0.05);
+}
+.drag-ph-tab {
+  border-radius: 50px;
+  background: rgba(255,255,255,0.08);
+}
+.drag-clone {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 3000;
+  pointer-events: none;
+  opacity: 0.92;
+  animation: none;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.55);
+  border-radius: 18px;
+}
+.tab-btn.drag-clone {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(20,26,36,0.95);
+  border: 1px solid rgba(255,255,255,0.5);
+  color: var(--text);
+  border-radius: 50px;
+  backdrop-filter: none;
+}
+
+/* 编辑模式工具条：常驻左下角，避免压住右侧表单抽屉 */
+.edit-bar {
+  position: fixed;
+  left: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1003;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: calc(100vw - 2.5rem);
+  padding: 0.6rem 0.8rem;
+  background: var(--history-bg);
+  backdrop-filter: var(--glass);
+  -webkit-backdrop-filter: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.edit-bar-status {
+  margin-right: 0.4rem;
+  color: var(--text-sub);
+  font-size: 0.72rem;
+}
+.edit-bar-btn {
+  padding: 0.35rem 0.8rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 50px;
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+}
+.edit-bar-btn:hover {
+  border-color: rgba(255,255,255,0.2);
+}
+.edit-bar-btn.primary {
+  background: linear-gradient(var(--glass-core), var(--glass-core)) padding-box, var(--glass-edge) border-box;
+  border-color: transparent;
+  color: #fff;
+  font-weight: 600;
+  backdrop-filter: blur(12px) saturate(1.35);
+  text-shadow: 0 1px 2px rgba(0,0,0,0.45);
+  box-shadow: var(--glass-glow), inset 0 1px 1px hsla(0,0%,100%,0.45);
+}
+/* 已连上 GitHub：推送按钮描个亮白边，一眼能看出不用重新粘 token */
+.edit-bar-btn.primary.ok {
+  box-shadow: 0 0 0 1px rgba(255,255,255,0.85), var(--glass-glow);
+}
+.edit-bar-btn.danger {
+  color: var(--danger);
+}
+.edit-bar-btn.danger:hover {
+  border-color: rgba(159,180,207,0.5);
+}
+
+/* 草稿和线上不一致时贴在搜索框上方（按钮复用 .edit-bar-btn 那套胶囊样式）：
+   草稿按浏览器各存一份，不显式说明的话，换个浏览器看就是另一个页面 */
+.draft-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  max-width: 600px;
+  margin: 0 auto 0.9rem auto;
+  padding: 0.55rem 0.7rem 0.55rem 0.9rem;
+  background: var(--history-bg);
+  backdrop-filter: var(--glass);
+  -webkit-backdrop-filter: var(--glass);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+}
+.draft-notice-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  margin-right: auto;
+  font-size: 0.72rem;
+  color: var(--text-sub);
+}
+.draft-notice-text strong {
+  color: var(--text);
+  font-weight: 600;
+}
+/* 编辑模式下编辑器自己的工具条已经标了草稿状态，别顶两层提示 */
+body.edit-mode .draft-notice {
+  display: none;
+}
+
+
